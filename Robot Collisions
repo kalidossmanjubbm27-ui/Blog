@@ -1,0 +1,54 @@
+#include <vector>
+#include <string>
+#include <numeric>
+#include <algorithm>
+#include <stack>
+
+using namespace std;
+
+class Solution {
+public:
+    vector<int> survivedRobotsHealths(vector<int>& positions, vector<int>& healths, string directions) {
+        int n = positions.size();
+        vector<int> ids(n);
+        iota(ids.begin(), ids.end(), 0); // Fill with 0, 1, ..., n-1
+
+        // Sort indices based on positions to process robots from left to right
+        sort(ids.begin(), ids.end(), [&](int i, int j) {
+            return positions[i] < positions[j];
+        });
+
+        stack<int> stk; // Stores indices of robots moving 'R'
+        for (int i : ids) {
+            if (directions[i] == 'R') {
+                stk.push(i);
+            } else {
+                // Robot moves 'L', check for collisions with 'R' robots in the stack
+                while (!stk.empty() && healths[i] > 0) {
+                    int top = stk.top();
+                    if (healths[top] > healths[i]) {
+                        healths[top] -= 1;
+                        healths[i] = 0; // Left robot destroyed
+                    } else if (healths[top] < healths[i]) {
+                        healths[i] -= 1;
+                        healths[top] = 0; // Right robot destroyed
+                        stk.pop();
+                    } else {
+                        healths[i] = 0;
+                        healths[top] = 0; // Both destroyed
+                        stk.pop();
+                    }
+                }
+            }
+        }
+
+        // Collect survivors in original order
+        vector<int> result;
+        for (int i = 0; i < n; ++i) {
+            if (healths[i] > 0) {
+                result.push_back(healths[i]);
+            }
+        }
+        return result;
+    }
+};
